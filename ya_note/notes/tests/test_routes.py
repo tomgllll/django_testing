@@ -8,6 +8,7 @@ from notes.models import Note
 
 User = get_user_model()
 
+
 class TestRoutes(TestCase):
 
     @classmethod
@@ -53,7 +54,8 @@ class TestRoutes(TestCase):
             ('notes:add', None),
             ('notes:detail', (self.note.slug,)),
             ('notes:edit', (self.note.slug,)),
-            ('notes:delete', (self.note.slug,))):
+            ('notes:delete', (self.note.slug,))
+        ):
             with self.subTest(name=name):
                 url = reverse(name, args=args)
                 redirect_url = f'{login_url}?next={url}'
