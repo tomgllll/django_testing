@@ -1,65 +1,46 @@
-import pytest
 from http import HTTPStatus
-from django.urls import reverse
+
+import pytest
 from pytest_django.asserts import assertRedirects
+from pytest_lazyfixture import lazy_fixture
 
+HOME_URL = lazy_fixture('home_url')
+LOGIN_URL = lazy_fixture('login_url')
+LOGOUT_URL = lazy_fixture('logout_url')
+SIGNUP_URL = lazy_fixture('signup_url')
+DETAIL_URL = lazy_fixture('detail_url')
+EDIT_URL = lazy_fixture('edit_url')
+DELETE_URL = lazy_fixture('delete_url')
 
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    'name, args',
-    (
-        ('news:home', None),
-        ('users:login', None),
-        ('users:logout', None),
-        ('users:signup', None),
-        ('news:detail', pytest.lazy_fixture('news_item')),
-    )
-)
-def test_pages_availability_for_anonymous_user(client, name, args):
-    url = reverse(name, args=[args.pk] if args else None)
-    response = client.get(url)
-    assert response.status_code == HTTPStatus.OK
+CLIENT = lazy_fixture('client')
+AUTHOR_CLIENT = lazy_fixture('author_client')
+NOT_AUTHOR_CLIENT = lazy_fixture('not_author_client')
 
 
 @pytest.mark.parametrize(
-    'name',
-    ('news:edit', 'news:delete')
+    'url, test_client, expected_status',
+    [
+        (HOME_URL, CLIENT, HTTPStatus.OK),
+        (LOGIN_URL, CLIENT, HTTPStatus.OK),
+        (LOGOUT_URL, CLIENT, HTTPStatus.OK),
+        (SIGNUP_URL, CLIENT, HTTPStatus.OK),
+        (DETAIL_URL, CLIENT, HTTPStatus.OK),
+        (EDIT_URL, AUTHOR_CLIENT, HTTPStatus.OK),
+        (DELETE_URL, AUTHOR_CLIENT, HTTPStatus.OK),
+        (EDIT_URL, NOT_AUTHOR_CLIENT, HTTPStatus.NOT_FOUND),
+        (DELETE_URL, NOT_AUTHOR_CLIENT, HTTPStatus.NOT_FOUND),
+    ],
 )
-def test_pages_availability_for_author(author_client, name, comment):
-    url = reverse(name, args=(comment.pk,))
-    response = author_client.get(url)
-    assert response.status_code == HTTPStatus.OK
-
-
-@pytest.mark.parametrize(
-    'parametrized_client, expected_status',
-    (
-        (pytest.lazy_fixture('not_author_client'), HTTPStatus.NOT_FOUND),
-        (pytest.lazy_fixture('author_client'), HTTPStatus.OK)
-    ),
-)
-@pytest.mark.parametrize(
-    'name',
-    ('news:edit', 'news:delete')
-)
-def test_pages_availability_for_different_users(
-    parametrized_client, name, comment, expected_status
-):
-    url = reverse(name, args=(comment.pk,))
-    response = parametrized_client.get(url)
+def test_status_codes(test_client, url, expected_status):
+    response = test_client.get(url)
     assert response.status_code == expected_status
 
 
 @pytest.mark.parametrize(
-    'name, args',
-    (
-        ('news:edit', pytest.lazy_fixture('pk_for_args')),
-        ('news:delete', pytest.lazy_fixture('pk_for_args')),
-    ),
+    'url',
+    (EDIT_URL, DELETE_URL),
 )
-def test_redirects(client, name, args):
-    login_url = reverse('users:login')
-    url = reverse(name, args=args)
+def test_redirects(client, login_url, url):
     expected_url = f'{login_url}?next={url}'
     response = client.get(url)
     assertRedirects(response, expected_url)
