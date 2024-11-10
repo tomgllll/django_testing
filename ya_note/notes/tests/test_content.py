@@ -12,18 +12,17 @@ from notes.forms import NoteForm
 class TestContent(BaseTestSetup):
 
     def test_notes_visibility_in_list(self):
-        cases = (
-            (self.author_client, self.author_note, True),
-            (self.author_client, self.other_note, False),
+        clients = (
+            (self.author_client, True),
+            (self.other_user_client, False),
         )
-        for client, note, should_be_in_list in cases:
-            with self.subTest(note=note):
+        for client, should_be_in_list in clients:
+            with self.subTest(client=client):
                 response = client.get(NOTES_LIST_URL)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
-                if should_be_in_list:
-                    self.assertIn(note, response.context['object_list'])
-                else:
-                    self.assertNotIn(note, response.context['object_list'])
+                self.assertIs(self.note in
+                              response.context['object_list'],
+                              should_be_in_list)
 
     def test_forms_on_add_and_edit_pages(self):
         urls = (NOTES_ADD_URL, NOTES_EDIT_URL_AUTHOR)

@@ -15,11 +15,9 @@ class TestNoteCreation(BaseTestSetup):
 
     def test_logged_in_user_can_create_note(self):
         Note.objects.all().delete()
-        initial_count = Note.objects.count()
-
         response = self.author_client.post(NOTES_ADD_URL, data=self.form_data)
         self.assertRedirects(response, NOTES_SUCCESS)
-        self.assertEqual(Note.objects.count(), initial_count + 1)
+        self.assertEqual(Note.objects.count(), 1)
         note = Note.objects.get()
         self.assertEqual(note.text, self.form_data['text'])
         self.assertEqual(note.title, self.form_data['title'])
@@ -43,32 +41,29 @@ class TestNoteCreation(BaseTestSetup):
 class TestNoteEditDelete(BaseTestSetup):
 
     def test_author_can_edit_note(self):
-        original_note = Note.objects.get(id=self.author_note.id)
         response = self.author_client.post(NOTES_EDIT_URL_AUTHOR,
                                            data=self.form_data)
         self.assertRedirects(response, NOTES_SUCCESS)
-        updated_note = Note.objects.get(id=self.author_note.id)
+        updated_note = Note.objects.get(id=self.note.id)
         self.assertEqual(updated_note.text, self.form_data['text'])
-        self.assertEqual(updated_note.title, original_note.title)
-        self.assertEqual(updated_note.author, original_note.author)
+        self.assertEqual(updated_note.title, self.form_data['title'])
+        self.assertEqual(updated_note.author, self.note.author)
 
     def test_user_cant_edit_note_of_another_user(self):
-        original_note = Note.objects.get(id=self.author_note.id)
-
         response = self.other_user_client.post(NOTES_EDIT_URL_AUTHOR,
                                                data=self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        updated_note = Note.objects.get(id=self.author_note.id)
-        self.assertEqual(updated_note.text, original_note.text)
-        self.assertEqual(updated_note.title, original_note.title)
-        self.assertEqual(updated_note.author, original_note.author)
+        updated_note = Note.objects.get(id=self.note.id)
+        self.assertEqual(updated_note.text, self.note.text)
+        self.assertEqual(updated_note.title, self.note.title)
+        self.assertEqual(updated_note.author, self.note.author)
 
     def test_author_can_delete_note(self):
         response = self.author_client.delete(NOTES_DELETE_URL_AUTHOR)
         self.assertRedirects(response, NOTES_SUCCESS)
-        self.assertEqual(Note.objects.filter(slug='author_slug').count(), 0)
+        self.assertFalse(Note.objects.filter(slug='author_slug').exists())
 
     def test_user_cant_delete_note_of_another_user(self):
         response = self.other_user_client.delete(NOTES_DELETE_URL_AUTHOR)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertEqual(Note.objects.filter(slug='author_slug').count(), 1)
+        self.assertTrue(Note.objects.filter(slug='author_slug').exists())

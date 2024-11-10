@@ -50,11 +50,6 @@ def not_author_client(not_author_user):
 
 
 @pytest.fixture
-def pk_for_args(comment):
-    return (comment.pk,)
-
-
-@pytest.fixture
 def comment_form_data():
     return {'text': 'Текст комментария'}
 

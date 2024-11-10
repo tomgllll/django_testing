@@ -52,25 +52,23 @@ def test_user_cant_delete_comment_of_another_user(not_author_client,
 
 def test_author_can_edit_comment(author_client, edit_url, comment,
                                  comment_form_data, detail_url):
-    original_author = comment.author
-    original_news = comment.news
-    original_created = comment.created
-    comment_form_data['text'] = 'Обновленный текст'
     response = author_client.post(edit_url, data=comment_form_data)
     assertRedirects(response, detail_url + '#comments')
     updated_comment = Comment.objects.get(id=comment.id)
-    assert updated_comment.text == 'Обновленный текст'
-    assert updated_comment.author == original_author
-    assert updated_comment.news == original_news
-    assert updated_comment.created == original_created
+    assert updated_comment.text == comment_form_data['text']
+    assert updated_comment.author == comment.author
+    assert updated_comment.news == comment.news
+    assert updated_comment.created == comment.created
 
 
 def test_user_cant_edit_comment_of_another_user(not_author_client,
                                                 edit_url,
                                                 comment,
                                                 comment_form_data):
-    original_text = comment.text
     response = not_author_client.post(edit_url, data=comment_form_data)
     assert response.status_code == HTTPStatus.NOT_FOUND
     unchanged_comment = Comment.objects.get(id=comment.id)
-    assert unchanged_comment.text == original_text
+    assert unchanged_comment.text == comment.text
+    assert unchanged_comment.author == comment.author
+    assert unchanged_comment.news == comment.news
+    assert unchanged_comment.created == comment.created

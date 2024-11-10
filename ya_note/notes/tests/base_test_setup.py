@@ -32,17 +32,11 @@ class BaseTestSetup(TestCase):
     def setUpTestData(cls):
         cls.author = User.objects.create(username='Автор заметки')
         cls.other_user = User.objects.create(username='Читатель')
-        cls.author_note = Note.objects.create(
+        cls.note = Note.objects.create(
             title=AUTHOR_TITLE,
             text=AUTHOR_TEXT,
             slug=AUTHOR_SLUG,
             author=cls.author
-        )
-        cls.other_note = Note.objects.create(
-            title='Заметка другого юзера',
-            text='Текст заметки другого юзера',
-            slug=OTHER_USER_SLUG,
-            author=cls.other_user
         )
         cls.author_client = cls.client_class()
         cls.author_client.force_login(cls.author)

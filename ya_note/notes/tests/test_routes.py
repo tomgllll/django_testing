@@ -25,8 +25,8 @@ class TestRoutes(BaseTestSetup):
 
     def test_note_pages_availability(self):
         user_statuses = (
-            (self.author_client, self.author_note, HTTPStatus.OK),
-            (self.other_user_client, self.author_note, HTTPStatus.NOT_FOUND),
+            (self.author_client, self.note, HTTPStatus.OK),
+            (self.other_user_client, self.note, HTTPStatus.NOT_FOUND),
         )
         for user, note, status in user_statuses:
             for url in (NOTES_DETAIL_URL, NOTES_EDIT_URL_AUTHOR,
